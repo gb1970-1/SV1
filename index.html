@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Secret Vibe Pro</title>
+    <style>
+        :root { --p: #7c5cff; --s: #5fffd2; --bg: #050814; }
+        * { -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        body { margin: 0; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; text-align: center; }
+        
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 40px; padding: 30px; width: 85%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); z-index: 10; }
+        
+        .step { display: none; animation: fadeIn 0.4s ease; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Button & Progress */
+        .hold-area { position: relative; width: 160px; height: 160px; margin: 30px auto; }
+        #hold-btn { width: 100%; height: 100%; border-radius: 50%; border: none; background: linear-gradient(135deg, var(--p), var(--s)); font-weight: 900; font-size: 18px; cursor: pointer; box-shadow: 0 0 30px rgba(124,92,255,0.4); z-index: 2; position: relative; }
+        .progress-svg { position: absolute; top: -10px; left: -10px; transform: rotate(-90deg); }
+        .progress-circle { fill: none; stroke: var(--s); stroke-width: 6; stroke-dasharray: 628; stroke-dashoffset: 628; transition: stroke-dashoffset 0.1s linear; }
+
+        /* Mystery Reveal Area */
+        .mystery-box { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 20px; }
+        .pixel-img { width: 70px; height: 70px; border-radius: 50%; margin: 10px auto; background: var(--p); filter: blur(15px); transition: filter 0.5s; border: 2px solid var(--s); overflow: hidden; }
+        .pixel-img img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .q-btn { background: var(--p); color: white; border: none; padding: 15px; border-radius: 15px; width: 100%; font-weight: bold; margin-top: 15px; cursor: pointer; }
+        .share-hint { font-size: 11px; margin-top: 8px; color: var(--s); opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div class="glass">
+    <div id="step1" class="step active">
+        <h1 style="font-size: 24px;">👀 someone you know picked you</h1>
+        <p style="opacity: 0.6;">Bist du bereit zu erfahren, wer es war?</p>
+        <button class="q-btn" onclick="nextStep(2)">VIBE CHECK STARTEN</button>
+    </div>
+
+    <div id="step2" class="step">
+        <div class="hold-area">
+            <svg class="progress-svg" width="180" height="180"><circle class="progress-circle" r="85" cx="90" cy="90"/></svg>
+            <button id="hold-btn">HALTEN</button>
+        </div>
+        <p id="status">Scanne Energie...</p>
+    </div>
+
+    <div id="step3" class="step">
+        <h2 style="margin: 0;">MATCH! 🔥</h2>
+        <div style="font-size: 48px; font-weight: 900; color: var(--s);" id="score-val">94%</div>
+        
+        <div class="mystery-box">
+            <p style="font-size: 13px; margin: 0;">Absender-Vorschau:</p>
+            <div class="pixel-img" id="pixel-img">
+                <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="secret">
+            </div>
+            <div id="mystery-name" style="letter-spacing: 4px; font-weight: bold;">L _ _ _ _</div>
+        </div>
+
+        <button class="q-btn" style="background: white; color: black;" onclick="doShare()">TEILEN ZUM ENTPYXELN</button>
+        <div class="share-hint" id="share-text">Noch 3-mal teilen für volle Schärfe</div>
+        <button id="final-btn" class="q-btn" style="display:none; background: gold; color: black;" onclick="alert('Name: Lukas S. (aus deinen Kontakten)')">NAME JETZT SEHEN</button>
+    </div>
+</div>
+
+<script>
+    let audioCtx, oscillator, shareCount = 0;
+    const circle = document.querySelector('.progress-circle');
+    const btn = document.getElementById('hold-btn');
+    let timer, progress = 0;
+
+    function nextStep(s) {
+        document.querySelectorAll('.step').forEach(e => e.classList.remove('active'));
+        document.getElementById('step'+s).classList.add('active');
+    }
+
+    function startSound() {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        oscillator = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(60, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        oscillator.connect(gain); gain.connect(audioCtx.destination);
+        oscillator.start();
+    }
+
+    function start() {
+        progress = 0; startSound();
+        timer = setInterval(() => {
+            progress += 1.5;
+            circle.style.strokeDashoffset = 534 - (progress / 100 * 534);
+            if(navigator.vibrate) navigator.vibrate(15);
+            if(progress >= 100) { clearInterval(timer); oscillator.stop(); nextStep(3); }
+        }, 30);
+    }
+
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); start(); });
+    btn.addEventListener('touchend', () => { clearInterval(timer); if(oscillator) oscillator.stop(); circle.style.strokeDashoffset = 534; });
+
+    function doShare() {
+        shareCount++;
+        const blurVal = Math.max(0, 15 - (shareCount * 5));
+        document.getElementById('pixel-img').style.filter = `blur(${blurVal}px)`;
+        
+        if(shareCount >= 3) {
+            document.getElementById('share-text').style.display = 'none';
+            document.getElementById('final-btn').style.display = 'block';
+        }
+
+        if(navigator.share) {
+            navigator.share({ title: 'Secret Vibe', text: 'Wer hat mich gepickt? Schau dir meinen Vibe an!', url: window.location.href });
+        }
+    }
+</script>
+</body>
+</html>
